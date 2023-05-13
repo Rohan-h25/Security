@@ -95,12 +95,42 @@ app.get("/register", function(req,res) {
   res.render("register");
 });
 
-app.get("/secrets", function(req,res) {
+app.get("/secrets",async function(req,res) {
+    if (req.isAuthenticated()) {
+      try {
+        const foundUser = await User.find({ secret: { $ne: null } }).exec();
+        res.render("secrets", {usersWithSecrets: foundUser});
+      }
+      catch {
+        console.log("Error");
+      }
+    }
+    else {
+      res.redirect("/login");
+    }
+});
+
+
+app.get("/submit", function(req,res) {
   if (req.isAuthenticated()) {
-    res.render("secrets");
+    res.render("submit");
   }
   else {
     res.redirect("/login");
+  }
+});
+
+app.post("/submit",async function(req,res) {
+  const submittedSecret = req.body.secret;
+
+  try {
+    const foundUser = await User.findById(req.user.id).exec();
+    foundUser.secret = submittedSecret;
+    foundUser.save();
+    res.redirect("/secrets");
+  }
+  catch {
+    console.log("error");
   }
 });
 
